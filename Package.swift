@@ -28,7 +28,7 @@ let package = Package(
             name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "AppTests", package: "hummingbird"),
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
             ],
             path: "Tests/AppTests"
         ),
