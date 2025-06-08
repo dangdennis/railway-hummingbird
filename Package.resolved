@@ -1,5 +1,4 @@
 {
-  "originHash" : "ff055ba5d56ccdbfdda3567ca5b0b86bf5c2422cb49b5c3454579a7697862c55",
   "pins" : [
     {
       "identity" : "async-http-client",
@@ -17,6 +16,15 @@
       "state" : {
         "revision" : "65ace7855fa8413d6218adeecaf706f2b99c23c1",
         "version" : "2.14.1"
+      }
+    },
+    {
+      "identity" : "postgres-nio",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/vapor/postgres-nio.git",
+      "state" : {
+        "revision" : "ccb25dcc428587224633a79c0ce0430eeac3dc0f",
+        "version" : "1.26.2"
       }
     },
     {
@@ -218,5 +226,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

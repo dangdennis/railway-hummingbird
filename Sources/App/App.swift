@@ -3,7 +3,7 @@ import Hummingbird
 import Logging
 
 @main
-struct AppCommand: AsyncParsableCommand, AppArguments {
+struct App: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
@@ -13,6 +13,9 @@ struct AppCommand: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var logLevel: Logger.Level?
 
+    @Flag
+    var inMemoryTesting: Bool = false
+
     func run() async throws {
         let app = try await buildApplication(self)
         try await app.runService()
@@ -21,7 +24,7 @@ struct AppCommand: AsyncParsableCommand, AppArguments {
 
 /// Extend `Logger.Level` so it can be used as an argument
 #if hasFeature(RetroactiveAttribute)
-    extension Logger.Level: @retroactive ExpressibleByArgument {}
+extension Logger.Level: @retroactive ExpressibleByArgument {}
 #else
-    extension Logger.Level: ExpressibleByArgument {}
+extension Logger.Level: ExpressibleByArgument {}
 #endif

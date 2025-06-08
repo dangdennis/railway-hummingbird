@@ -11,22 +11,26 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
+        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
     ],
     targets: [
-        .executableTarget(name: "App",
+        .executableTarget(
+            name: "App",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "PostgresNIO", package: "postgres-nio"),
             ],
             path: "Sources/App"
         ),
-        .testTarget(name: "AppTests",
+        .testTarget(
+            name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "HummingbirdTesting", package: "hummingbird")
+                .product(name: "AppTests", package: "hummingbird"),
             ],
             path: "Tests/AppTests"
-        )
+        ),
     ]
 )
