@@ -8,8 +8,8 @@ services:
       - db_data:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: hummingbird
+      POSTGRES_PASSWORD: hummingbird
+      POSTGRES_DB: hummingbird
     ports:
       - '5432:5432'

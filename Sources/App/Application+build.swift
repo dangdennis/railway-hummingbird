@@ -4,9 +4,6 @@ import Hummingbird
 import HummingbirdFluent
 
 public protocol AppArguments {
-    var inMemoryDatabase: Bool { get }
-    var migrate: Bool { get }
-    var revert: Bool { get }
     var hostname: String { get }
     var port: Int { get }
 }
@@ -14,36 +11,52 @@ public protocol AppArguments {
 func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = Logger(label: "todos-fluent")
     let fluent = Fluent(logger: logger)
-    // add sqlite database
-    if arguments.inMemoryDatabase {
-        fluent.databases.use(.sqlite(.memory), as: .sqlite)
-    } else {
-        fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
-    }
+
+    fluent.databases.use(
+        DatabaseConfigurationFactory.postgres(
+            configuration: .init(
+                hostname: "localhost",
+                port: 5432,
+                username: "hummingbird",
+                password: "hummingbird",
+                database: "hummingbird",
+                tls: .disable)), as: .psql, isDefault: true
+    )
+
+    // fluent.databases.use(
+    //     DatabaseConfigurationFactory.postgres(
+    //         configuration: .init(
+    //             hostname: Environment.get("DATABASE_HOST") ?? "localhost",
+    //             port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:))
+    //                 ?? SQLPostgresConfiguration.ianaPortNumber,
+    //             username: Environment.get("DATABASE_USERNAME") ?? "postgres",
+    //             password: Environment.get("DATABASE_PASSWORD") ?? "postgres",
+    //             database: Environment.get("DATABASE_NAME") ?? "postgres",
+    //             tls: .disable)
+    //     ), as: .psql)
+
     // add migrations
     await fluent.migrations.add(CreateTodo())
 
     let fluentPersist = await FluentPersistDriver(fluent: fluent)
-    // revert
-    if arguments.revert {
-        try await fluent.revert()
-    }
-    // migrate
-    if arguments.migrate || arguments.inMemoryDatabase {
-        try await fluent.migrate()
-    }
+
+    try await fluent.migrate()
+
     // router
     let router = Router()
 
     // add logging middleware
     router.add(middleware: LogRequestsMiddleware(.info))
+
     // add file middleware to server css and js files
     router.add(middleware: FileMiddleware(logger: logger))
-    router.add(middleware: CORSMiddleware(
-        allowOrigin: .originBased,
-        allowHeaders: [.contentType],
-        allowMethods: [.get, .options, .post, .delete, .patch]
-    ))
+    router.add(
+        middleware: CORSMiddleware(
+            allowOrigin: .originBased,
+            allowHeaders: [.contentType],
+            allowMethods: [.get, .options, .post, .delete, .patch]
+        ))
+
     // add health check route
     router.get("/health") { _, _ in
         return HTTPResponse.Status.ok
