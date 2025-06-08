@@ -48,6 +48,10 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
             allowMethods: [.get, .options, .post, .delete, .patch]
         ))
 
+    router.get("/") { _, _ in
+        return "Welcome to Hummingbird Todos!"
+    }
+
     // add health check route
     router.get("/health") { _, _ in
         return HTTPResponse.Status.ok
