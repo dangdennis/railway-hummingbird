@@ -12,28 +12,19 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     let logger = Logger(label: "todos-fluent")
     let fluent = Fluent(logger: logger)
 
-    fluent.databases.use(
-        DatabaseConfigurationFactory.postgres(
-            configuration: .init(
-                hostname: "localhost",
-                port: 5432,
-                username: "hummingbird",
-                password: "hummingbird",
-                database: "hummingbird",
-                tls: .disable)), as: .psql, isDefault: true
+    let postgresConfig = SQLPostgresConfiguration(
+        hostname: ProcessInfo.processInfo.environment["DATABASE_HOST"] ?? "localhost",
+        port: ProcessInfo.processInfo.environment["DATABASE_PORT"].flatMap(Int.init) ?? 5432,
+        username: ProcessInfo.processInfo.environment["DATABASE_USERNAME"] ?? "hummingbird",
+        password: ProcessInfo.processInfo.environment["DATABASE_PASSWORD"] ?? "hummingbird",
+        database: ProcessInfo.processInfo.environment["DATABASE_NAME"] ?? "hummingbird",
+        tls: .disable
     )
 
-    // fluent.databases.use(
-    //     DatabaseConfigurationFactory.postgres(
-    //         configuration: .init(
-    //             hostname: Environment.get("DATABASE_HOST") ?? "localhost",
-    //             port: Environment.get("DATABASE_PORT").flatMap(Int.init(_:))
-    //                 ?? SQLPostgresConfiguration.ianaPortNumber,
-    //             username: Environment.get("DATABASE_USERNAME") ?? "postgres",
-    //             password: Environment.get("DATABASE_PASSWORD") ?? "postgres",
-    //             database: Environment.get("DATABASE_NAME") ?? "postgres",
-    //             tls: .disable)
-    //     ), as: .psql)
+    fluent.databases.use(
+        DatabaseConfigurationFactory.postgres(configuration: postgresConfig),
+        as: .psql
+    )
 
     // add migrations
     await fluent.migrations.add(CreateTodo())
