@@ -8,7 +8,7 @@ struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
 
     @Option(name: .shortAndLong)
     var port: Int = 8080
-    
+
     func run() async throws {
         let app = try await buildApplication(self)
         try await app.runService()

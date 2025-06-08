@@ -1,22 +1,24 @@
 @testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@Suite("Hummingbird App Tests", .serialized)
+struct AppSwiftTests {
     struct TestArguments: AppArguments {
         var hostname: String { "localhost" }
         var port: Int { 8080 }
-        var migrate: Bool { true }
-        var revert: Bool { false }
-        var inMemoryDatabase: Bool { true }
     }
 
     enum TestError: Error {
         case unexpectedStatus(HTTPResponse.Status)
+        case missingBody
     }
 
-    func createTodo(_ todo: CreateTodoRequest, client: some TestClientProtocol) async throws -> Todo {
+    // MARK: - Helper Methods
+
+    private func createTodo(_ todo: CreateTodoRequest, client: some TestClientProtocol) async throws -> Todo {
         return try await client.execute(
             uri: "/api/todos",
             method: .post,
@@ -24,12 +26,11 @@ final class AppTests: XCTestCase {
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             guard response.status == .created else { throw TestError.unexpectedStatus(response.status) }
-            let buffer = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(Todo.self, from: buffer)
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
-    func getTodo(_ id: String, client: some TestClientProtocol) async throws -> Todo? {
+    private func getTodo(_ id: String, client: some TestClientProtocol) async throws -> Todo? {
         return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .get
@@ -39,7 +40,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func deleteTodo(_ id: String, client: some TestClientProtocol) async throws {
+    private func deleteTodo(_ id: String, client: some TestClientProtocol) async throws {
         return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .delete
@@ -48,7 +49,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func editTodo(_ id: String, _ todo: EditTodoRequest, client: some TestClientProtocol) async throws -> Todo? {
+    private func editTodo(_ id: String, _ todo: EditTodoRequest, client: some TestClientProtocol) async throws -> Todo? {
         return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .patch,
@@ -60,26 +61,29 @@ final class AppTests: XCTestCase {
         }
     }
 
-    // MARK: tests
+    // MARK: - Tests
 
-    func testCreateTodo() async throws {
+    @Test("Create Todo")
+    func createTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
-            XCTAssertEqual(todo.title, "Write more tests")
+            #expect(todo.title == "Write more tests")
         }
     }
 
-    func testGetTodo() async throws {
+    @Test("Get Todo")
+    func getTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
-            let getTodo = try await self.getTodo(todo.id, client: client)
-            XCTAssertEqual(getTodo?.title, "Write more tests")
+            let retrievedTodo = try await self.getTodo(todo.id, client: client)
+            #expect(retrievedTodo?.title == "Write more tests")
         }
     }
 
-    func testDeleteTodo() async throws {
+    @Test("Delete Todo")
+    func deleteTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
@@ -88,39 +92,43 @@ final class AppTests: XCTestCase {
             do {
                 _ = try await self.getTodo(todo.id, client: client)
             } catch TestError.unexpectedStatus(let status) {
-                XCTAssertEqual(status, .noContent)
+                #expect(status == .noContent)
             } catch {
-                XCTFail("Error: \(error)")
+                Issue.record("Unexpected error: \(error)")
             }
         }
     }
 
-    func testEditTodo() async throws {
+    @Test("Edit Todo")
+    func editTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
             _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), client: client)
             let editedTodo = try await self.getTodo(todo.id, client: client)
 
-            XCTAssertEqual(editedTodo?.title, "Written tests")
-            XCTAssertEqual(editedTodo?.completed, true)
+            #expect(editedTodo?.title == "Written tests")
+            #expect(editedTodo?.completed == true)
         }
     }
 
-    func testUnauthorizedEditTodo() async throws {
+    @Test("Unauthorized Edit Todo")
+    func unauthorizedEditTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
             do {
                 _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), client: client)
             } catch TestError.unexpectedStatus(let status) {
-                XCTAssertEqual(status, .unauthorized)
+                #expect(status == .unauthorized)
             }
         }
     }
 }
 
-extension AppTests {
+// MARK: - Data Transfer Objects
+
+extension AppSwiftTests {
     struct CreateTodoRequest: Codable {
         let title: String
     }

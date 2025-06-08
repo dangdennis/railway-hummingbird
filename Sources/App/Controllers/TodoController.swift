@@ -25,10 +25,13 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// Create new todo
-    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
+    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo>
+    {
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
-        guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
-        let todo = try Todo(title: todoRequest.title)
+        guard let host = request.head.authority else {
+            throw HTTPError(.badRequest, message: "No host header")
+        }
+        let todo = Todo(title: todoRequest.title)
         let db = self.fluent.db()
         _ = try await todo.save(on: db)
         todo.completed = false
@@ -55,9 +58,10 @@ struct TodoController<Context: RequestContext> {
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .first()
         else {
             throw HTTPError(.notFound)
         }
@@ -67,12 +71,15 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// delete todo
-    @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func deleteId(_ request: Request, context: Context) async throws
+        -> HTTPResponse.Status
+    {
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .first()
         else {
             throw HTTPError(.notFound)
         }
