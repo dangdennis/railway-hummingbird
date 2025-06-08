@@ -11,6 +11,12 @@ A production-ready Hummingbird web framework template for containerized deployme
 - **Production-ready** configuration with optimized builds
 - **CORS support** for cross-origin requests
 
+## 🚀 One-Click Deploy
+
+Deploy this template to Railway with a single click:
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/JOQEiS?referralCode=mT7-6r)
+
 ## 🛠 Local Development
 
 ### Prerequisites
@@ -22,7 +28,7 @@ A production-ready Hummingbird web framework template for containerized deployme
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/dangdennis/railway-hummingbird
 cd App
 ```
 
